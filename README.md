@@ -5,31 +5,21 @@ Discord OAuth → RS256 JWT tokens
 ## Endpoints
 
 ### GET /health
-Health check.
+Health check endpoint for monitoring.
 
 **Response:**
 ```json
 {"status": "healthy"}
 ```
 
-### GET /auth/login
-Get Discord OAuth URL.
-
-**Response:**
-```json
-{
-  "auth_url": "https://discord.com/api/oauth2/authorize?client_id=...&..."
-}
-```
-
-### POST /auth
-Exchange Discord code for JWT.
+### POST /
+Exchange Discord authorization code for JWT token.
 
 **Request:**
 ```json
 {
   "code": "discord_auth_code",
-  "redirectUri": "http://localhost:8001/auth/callback"
+  "redirectUri": "http://localhost:3000"
 }
 ```
 
@@ -38,21 +28,14 @@ Exchange Discord code for JWT.
 {
   "token": "eyJhbGciOiJSUzI1NiIs...",
   "user": {
-    "id": "334302555456929795",
-    "username": "finfire"
+    "id": "123456789",
+    "username": "discordusername"
   }
 }
 ```
 
-### GET /auth/callback
-Discord redirect endpoint (query parameters).
-
-**Query:** `code=...`
-
-**Response:** Same as POST /auth
-
-### GET /auth/public-key
-Get public key for JWT verification (RS256).
+### GET /public-key
+Get RSA public key for JWT verification.
 
 **Response:**
 ```json
@@ -72,22 +55,23 @@ Get public key for JWT verification (RS256).
 }
 ```
 
-## Environment Variables
-```
-DISCORD_CLIENT_ID=...
-DISCORD_CLIENT_SECRET=...
-DISCORD_REDIRECT_URI=http://localhost:8001/auth/callback
-PORT=8001
-```
+- `discordId`: User's Discord ID (backwards compatible field)
+- `userId`: User's Discord ID (new format)
+- `username`: User's Discord username
+- `iat`: Issued at (seconds since epoch)
+- `exp`: Expiration (30 days from issue)
 
 ## Development
 ```bash
-python -m uvicorn src.main:app --reload --port 8001
-pytest tests/ -v
-python test_full_flow.py
-```
+# Install dependencies
+pip install -r requirements-dev.txt
 
-## Docker
-```bash
-docker compose up --build
+# Run the service with auto-reload
+python -m uvicorn src.main:app --reload --port 8001
+
+# Run unit tests
+pytest tests/ -v
+
+# Run full integration test with mocked Discord API
+python test_full_flow.py
 ```

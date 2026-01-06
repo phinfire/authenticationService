@@ -30,7 +30,7 @@ class TestHealthCheck:
 
 class TestPublicKey:
     def test_public_key_endpoint(self):
-        response = client.get("/auth/public-key")
+        response = client.get("/public-key")
         assert response.status_code == 200
         data = response.json()
         assert "public_key" in data
@@ -65,25 +65,16 @@ class TestJWTGeneration:
 class TestAuthEndpoint:
     def test_auth_endpoint_missing_code(self):
         """Test auth endpoint rejects missing code."""
-        response = client.post("/auth", json={"redirectUri": "http://localhost:3000"})
+        response = client.post("/", json={"redirectUri": "http://localhost:3000"})
         assert response.status_code == 422  # Validation error
     
     def test_auth_endpoint_missing_redirect_uri(self):
         """Test auth endpoint rejects missing redirectUri."""
-        response = client.post("/auth", json={"code": "test_code"})
+        response = client.post("/", json={"code": "test_code"})
         assert response.status_code == 422  # Validation error
 
 
-class TestLoginEndpoint:
-    def test_login_returns_discord_auth_url(self):
-        """Test login endpoint returns Discord OAuth URL."""
-        response = client.get("/auth/login")
-        assert response.status_code == 200
-        data = response.json()
-        assert "auth_url" in data
-        assert "discord.com/api/oauth2/authorize" in data["auth_url"]
-        assert "client_id=test_id" in data["auth_url"]
-        assert "scope=identify" in data["auth_url"]
+
 
 
 # Manual test instructions

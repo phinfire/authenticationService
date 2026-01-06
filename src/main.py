@@ -76,7 +76,7 @@ def _create_jwt(user_data: dict):
     return jwt.encode(payload, private_key, algorithm="RS256")
 
 
-@app.get("/auth/public-key")
+@app.get("/public-key")
 def get_public_key():
     """Returns the public key for JWT verification."""
     return JSONResponse({
@@ -84,49 +84,11 @@ def get_public_key():
     })
 
 
-@app.get("/auth/login")
-def discord_login():
-    """Redirects user to Discord OAuth authorization."""
-    discord_auth_url = (
-        f"https://discord.com/api/oauth2/authorize?"
-        f"client_id={DISCORD_CLIENT_ID}&"
-        f"redirect_uri={DISCORD_REDIRECT_URI}&"
-        f"response_type=code&"
-        f"scope=identify"
-    )
-    return JSONResponse({
-        "auth_url": discord_auth_url
-    })
-
-
-@app.post("/auth")
+@app.post("/")
 async def discord_auth(request: AuthRequest):
-    """Backwards compatible auth endpoint. Exchanges Discord code for JWT token."""
+    """Exchanges Discord code for JWT token."""
     try:
         user_data = _exchange_discord_code(request.code, request.redirectUri)
-        token = _create_jwt(user_data)
-        
-        return JSONResponse({
-            "token": token,
-            "user": {
-                "id": user_data["id"],
-                "username": user_data.get("username")
-            }
-        })
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
-
-
-@app.get("/auth/callback")
-def discord_callback(code: str = Query(...), redirect_uri: str = Query(None)):
-    """Handles Discord OAuth callback with code query parameter."""
-    try:
-        if not redirect_uri:
-            redirect_uri = DISCORD_REDIRECT_URI
-        
-        user_data = _exchange_discord_code(code, redirect_uri)
         token = _create_jwt(user_data)
         
         return JSONResponse({

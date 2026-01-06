@@ -32,7 +32,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/phinfire/skanderbeg-auth-service:latest
+        tags: ghcr.io/phinfire/auth-service:latest
 
     - name: Copy compose file to VPS
       uses: appleboy/scp-action@v0.1.7
@@ -41,7 +41,7 @@ jobs:
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
         source: "./docker-compose.vps.yml"
-        target: "/opt/skanderbeg-auth-service/"
+        target: "/opt/auth-service/"
 
     - name: Deploy on VPS over SSH
       uses: appleboy/ssh-action@v0.1.7
@@ -55,8 +55,8 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         envs: DISCORD_CLIENT_ID,DISCORD_CLIENT_SECRET,DISCORD_REDIRECT_URI
         script: |
-          mkdir -p /opt/skanderbeg-auth-service
-          cd /opt/skanderbeg-auth-service
+          mkdir -p /opt/auth-service
+          cd /opt/auth-service
           
           # Rename the VPS compose file
           mv docker-compose.vps.yml docker-compose.yml
