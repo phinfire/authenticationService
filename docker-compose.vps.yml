@@ -1,6 +1,6 @@
 services:
   auth-service:
-    image: ghcr.io/phinfire/skanderbeg-auth-service:latest
+    image: ghcr.io/phinfire/auth-service:latest
     ports:
       - "8001:8001"
     env_file: .env
