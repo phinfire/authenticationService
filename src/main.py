@@ -3,6 +3,7 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 from dotenv import load_dotenv
@@ -19,6 +20,20 @@ class AuthRequest(BaseModel):
 load_dotenv()
 
 app = FastAPI(title="Authentication Service")
+
+allowed_origins = [
+    "http://localhost:4200",
+    "https://codingafterdark.de"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
 DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
 DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI", "http://localhost:8001/auth/callback")
