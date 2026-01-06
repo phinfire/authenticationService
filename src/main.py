@@ -1,6 +1,6 @@
 import os
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -8,7 +8,7 @@ import requests
 from dotenv import load_dotenv
 import uvicorn
 
-from keys import generate_rsa_keys, get_private_key_pem, get_public_key_pem
+from .keys import generate_rsa_keys, get_private_key_pem, get_public_key_pem
 
 
 class AuthRequest(BaseModel):
@@ -69,9 +69,8 @@ def _create_jwt(user_data: dict):
         "discordId": user_data["id"],  # Backwards compatible
         "userId": user_data["id"],  # New format
         "username": user_data.get("username"),
-        "email": user_data.get("email"),
-        "iat": datetime.utcnow(),
-        "exp": datetime.utcnow() + timedelta(days=30)  # 30 days like original
+        "iat": datetime.now(timezone.utc),
+        "exp": datetime.now(timezone.utc) + timedelta(days=30)  # 30 days like original
     }
     
     return jwt.encode(payload, private_key, algorithm="RS256")
@@ -93,7 +92,7 @@ def discord_login():
         f"client_id={DISCORD_CLIENT_ID}&"
         f"redirect_uri={DISCORD_REDIRECT_URI}&"
         f"response_type=code&"
-        f"scope=identify%20email"
+        f"scope=identify"
     )
     return JSONResponse({
         "auth_url": discord_auth_url
@@ -111,8 +110,7 @@ async def discord_auth(request: AuthRequest):
             "token": token,
             "user": {
                 "id": user_data["id"],
-                "username": user_data.get("username"),
-                "email": user_data.get("email")
+                "username": user_data.get("username")
             }
         })
     except HTTPException:
@@ -135,8 +133,7 @@ def discord_callback(code: str = Query(...), redirect_uri: str = Query(None)):
             "token": token,
             "user": {
                 "id": user_data["id"],
-                "username": user_data.get("username"),
-                "email": user_data.get("email")
+                "username": user_data.get("username")
             }
         })
     except HTTPException:
