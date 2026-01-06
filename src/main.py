@@ -22,22 +22,29 @@ load_dotenv()
 app = FastAPI(title="Authentication Service")
 
 allowed_origins = [
-    "http://localhost:4200",
-    "https://codingafterdark.de"
+    "http://localhost:4200",        # Local development
+    "https://localhost:4200",       # Local development HTTPS
+    "https://codingafterdark.de",   # Production
+    "http://codingafterdark.de"     # Production (redirect to HTTPS but allow both)
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,
 )
 
 DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
 DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
 DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI", "http://localhost:8001/auth/callback")
 PORT = int(os.getenv("PORT", 8001))
+
+# Track when the service starts for uptime calculation
+START_TIME = datetime.now(timezone.utc)
 
 generate_rsa_keys()
 
@@ -122,7 +129,12 @@ async def discord_auth(request: AuthRequest):
 @app.get("/health")
 def health_check():
     """Health check endpoint."""
-    return {"status": "healthy"}
+    uptime_seconds = (datetime.now(timezone.utc) - START_TIME).total_seconds()
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "uptime": f"{uptime_seconds:.0f} seconds"
+    }
 
 
 if __name__ == "__main__":
